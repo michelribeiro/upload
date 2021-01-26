@@ -33,7 +33,26 @@ const App: React.FC = () => {
             })
             setStartUpload(false)
         }
+
     },[startUpload])
+
+
+    useEffect(() => {
+        async function getInitialState() {
+            const response = await api.get('posts');
+            setUploadedFiles(() => {
+                return response.data.map((file:any) => ({
+                    id: file._id,
+                    name: file.name,
+                    readableSize: filesize(file.size),
+                    preview: file.url,
+                    url: file.url,
+                    uploaded: true
+                }))
+            })
+        }
+        getInitialState();
+    },[])
 
     const handleUpload = (files:any) => {
 
@@ -92,9 +111,11 @@ const App: React.FC = () => {
             })
         });
     }
-
+    //TODO: Resolver o tipo recebido do componente FileListItem
     const handleDelete = async (id:number) => {
-        await api.delete(`posts/${id}`);
+        api.delete(`posts/${id}`).then(info => {
+            console.info(info)
+        }).catch( err => console.error(err));
         setUploadedFiles(prevState => {
             return prevState.filter(item => item.id !== id);
         })
@@ -110,7 +131,7 @@ const App: React.FC = () => {
                                 <BoxList>
                                     {
                                         uploadedFiles.map((itemFile:AttrFiles) => (
-                                            <FileListItem {...itemFile } key={itemFile.id} />
+                                            <FileListItem {...itemFile } key={itemFile.id} onDelete={handleDelete} />
                                         ))
                                     }
                                 </BoxList>
